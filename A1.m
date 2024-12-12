@@ -7,5 +7,5 @@ phase_PID = 50; % deg
 phase_system = PM - (phase_PID+180);
 
 % Rule of thumb
-G = 1.585; % linear unit
-kp_pid = 0.2082;
+G_wc = 1.585; % linear units
+kp_pid = 0.33/G_wc;
