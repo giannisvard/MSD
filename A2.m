@@ -3,41 +3,42 @@ load MSD2024_P2_Plant.mat % Load the file
 s = tf('s');
 % Define options for Bode plot
 opts = bodeoptions;
-opts.FreqUnits = 'Hz'; % Change frequency units to Hertz
+%opts.FreqUnits = 'Hz'; % Change frequency units to Hertz, commented out
+%due to 
 
 % figure;
 % bode(G); grid on;
 % title('System Response');
 
-%% tune controller variables
+%% Feedback Controller tuning
 wc = 16.07; %radians
 
 Kp = 0.5;
 
-wi = 230; %radians
+wi = 230; %Hz, must be changed
 
-wd =  130 ; %radians
+wd =  130 ; %Hz, must be changed
 
-wt = 90000; %radians
-
-
+wt = 90000; %Hz, must be changed
 
 
-w11 = 738;
-zeta_11 = 0.01 ;
-w12 = 738;
-zeta_12 = 0.9 ;
 
+
+w11 = 738; %Hz, must be changed
+zeta_11 = 0.01 ; %Hz, must be changed
+w12 = 738; %Hz, must be changed
+zeta_12 = 0.9 ; %Hz, must be changed
+ 
 Q11 = 1/(2*zeta_11);
 Q12 = 1/(2*zeta_12);
 
 notch = ((s/w11)^2 + (s/(Q11*w11)) + 1) / ((s/w12)^2 + (s/(Q12*w12)) + 1);
 
 
-w21 = 1009;
-zeta_21 = 0.01;
-w22 = 971.7;
-zeta_22 = 0.005;
+w21 = 1009; %Hz, must be changed
+zeta_21 = 0.01; %Hz, must be changed
+w22 = 971.7; %Hz, must be changed
+zeta_22 = 0.005; %Hz, must be changed
 
 Q21 = 1/(2*zeta_21);
 Q22 = 1/(2*zeta_22);
@@ -103,17 +104,45 @@ Tsum = connect(G,C,S1,S2,S3,"r","y");
 %End of Closed Loop Controller
 
 
-%% Feedforward Definition
-F = inv(G);
+%% Feedforward Controller tuning
+% New controller parameters for ff
+% Gain
+Kp = 1.91;
+% Skewed Notch
+fz1 = 739; %Skewed notch zero, Hz
+zz1 = 0.009; %Skewed notch zero damping coefficient
+fp1 = 972; %Skewed notch pole, Hz
+zp1 = 0.005; %Skewed notch pole damping coefficient
+% Notch
+f2 = 1008; %Notch zero, Hz
+zz2 = 0.014; %Notch zero damping coefficient
+zp2 = 0.41; %Notch pole damping coefficient
+% Lowpass
+flp = 1003; %Low pass zero, Hz
+% Convert shapeit values to angular frequencies and quality factors
+wz1 = fz1*2*pi; % rad/s
+wp1 = fp1*2*pi; % rad/s
+w2 = f2*2*pi; % rad/s
+wlp = flp*2*pi; % rad/s
+
+Qz1 = 1/(2*zz1); %Quality factor (Q1)
+Qp1 = 1/(2*zp1); %Quality factor (Q2)
+Qz2 = 1/(2*zz2); %Quality factor (Q1)
+Qp2 = 1/(2*zp2); %Quality factor (Q2)
+
+% Controller parameters
+C_skewednotch = ((s/wz1)^2+s/(Qz1*wz1)+1)/((s/wp1)^2+s/(Qp1*wp1)+1);
+C_notch = ((s/w2)^2+s/(Qz2*w2)+1)/((s/w2)^2+s/(Qp2*w2)+1);
+C_lowpass = 1/(s/wlp+1);
+Cff = C_skewednotch*C_notch*C_lowpass;
 
 % figure;
 % bode(F); grid on;
 % title('Feedforward Controller Response');
 
 
-disp(isproper(F));
-%its not proper..
-%make proper using low/pass filter
+disp(isproper(C));
+%IS PROPER VERY NICE! (Borat voice)
 % wclp = 2 * wc;
 % LowPass = 1 / (((s / wclp) + 1)^2)    ;
 
