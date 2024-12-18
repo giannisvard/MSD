@@ -1,3 +1,6 @@
+
+clear;
+
 load MSD2024_P2_Plant.mat % Load the file
 
 s = tf('s');
@@ -21,50 +24,70 @@ wd =  130 ; %Hz, must be changed
 
 wt = 90000; %Hz, must be changed
 
+C_PID = (Kp + wi/s + ((s/wd) + 1) / ((s/wt) + 1))      %proportional, integral, lead/lag
 
 
+% w11 = 738;
+% zeta_11 = 0.01 ;
+% w12 = 738;
+% zeta_12 = 0.9 ;
+% Q11 = 1/(2*zeta_11);
+% Q12 = 1/(2*zeta_12);
+% notch = ((s/w11)^2 + (s/(Q11*w11)) + 1) / ((s/w12)^2 + (s/(Q12*w12)) + 1);
 
-w11 = 738; %Hz, must be changed
-zeta_11 = 0.01 ; %Hz, must be changed
-w12 = 738; %Hz, must be changed
-zeta_12 = 0.9 ; %Hz, must be changed
- 
-Q11 = 1/(2*zeta_11);
-Q12 = 1/(2*zeta_12);
-
-notch = ((s/w11)^2 + (s/(Q11*w11)) + 1) / ((s/w12)^2 + (s/(Q12*w12)) + 1);
+w1 = 738;           % Notch frequency (rad/s)
+zeta_1 = 0.01;      % Damping for numerator (sharp)
+zeta_2 = 0.9;       % Damping for denominator (wider)
+num_notch = [1, 2*zeta_1*w1, w1^2];  % Numerator coefficients
+den_notch = [1, 2*zeta_2*w1, w1^2];  % Denominator coefficients
+notch = tf(num_notch, den_notch);
 
 
-w21 = 1009; %Hz, must be changed
-zeta_21 = 0.01; %Hz, must be changed
-w22 = 971.7; %Hz, must be changed
-zeta_22 = 0.005; %Hz, must be changed
+% w21 = 1009;
+% zeta_21 = 0.01;
+% w22 = 971.7;
+% zeta_22 = 0.005;
+% Q21 = 1/(2*zeta_21);
+% Q22 = 1/(2*zeta_22);
+% skewed_notch = ((2/w21)^2 + (s/(Q21*w21)) + 1) / ((s/22)^2 + (s/(Q22*w22)) + 1);
+
+
+w21 = 1009;          % Frequency for numerator (rad/s)
+zeta_21 = 0.01;      % Damping ratio for numerator
+w22 = 971.7;         % Frequency for denominator (rad/s)
+zeta_22 = 0.005;     % Damping ratio for denominator
+num_skewed = [1, 2*zeta_21*w21, w21^2];  % Numerator coefficients
+den_skewed = [1, 2*zeta_22*w22, w22^2];  % Denominator coefficients
+
+skewed_notch = tf(num_skewed, den_skewed);
+
 
 Q21 = 1/(2*zeta_21);
 Q22 = 1/(2*zeta_22);
 
 notch2 = ((2/w21)^2 + (s/(Q21*w21)) + 1) / ((s/22)^2 + (s/(Q22*w22)) + 1);
-%construct controller
-C = Kp * (1 + wi/s) * (s/wd + 1)/(s/wt + 1);
 
-% bode(C)
+%construct controller
+C = C_PID * notch * skewed_notch;
+
+bode(C);
 
 % figure;
 % bode(C); grid on;
 % title('Controller Response');
 
 %% Open loop 
-
-disp(opts);
-
-L = G*C;
-poles = pole(L);
-disp(poles);
-figure;
-bodeplot(L, opts); 
-grid on;
-margin(L);
-title('Open Loop Response');
+% 
+% disp(opts);
+% 
+% L = G*C;
+% poles = pole(L);
+% disp(poles);
+% figure;
+% bodeplot(L, opts); 
+% grid on;
+% margin(L);
+% title('Open Loop Response');
 
 % %% Sensitivity stuff
 % T = L / (1 + L);
