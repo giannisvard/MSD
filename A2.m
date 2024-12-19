@@ -74,10 +74,10 @@ bode(C);
 %% Open loop 
 % 
 % disp(opts);
-% 
-% L = G*C;
-% poles = pole(L);
-% disp(poles);
+
+L = G*C;
+poles = pole(L);
+disp(poles);
 % figure;
 % bodeplot(L, opts); 
 % grid on;
@@ -110,14 +110,14 @@ S3 = sumblk("y = x + n");
 
 Tsum = connect(G,C,S1,S2,S3,"r","y");
 
-% 
-% figure;
-% step(Tsum); grid on;
-% title('Closed Loop Step Response');
 
-% info = stepinfo(Tsum);
-% 
-% info
+figure;
+step(Tsum); grid on;
+title('Closed Loop Step Response');
+
+info = stepinfo(Tsum);
+
+info
 
 %End of Closed Loop Controller
 
