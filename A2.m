@@ -84,21 +84,21 @@ margin(S);
 title('Sensitivity');
 % Might have to add nyquist plots to evaluate modulus margin here!!!
 
-%% Step response
-G.u='v'; G.y='x'; % Caution: Giannis changed u with v and vice versa according to lecture 7
-C.u='e'; C.y='u'; 
+%% Feedback step response
+G.u='u'; G.y='x';
+C.u='e'; C.y='v'; 
 
 S1 = sumblk("e = r - y");
-S2 = sumblk("v = d + u");
+S2 = sumblk("u = d + v");
 S3 = sumblk("y = x + n");
 
-Tsum = connect(G,C,S1,S2,S3,"r","y");
+Tsuma = connect(G,C,S1,S2,S3,"r","y");
 
 
 figure;
-step(Tsum); grid on;
-title('Closed Loop Step Response (Tsum)');
-info = stepinfo(Tsum)
+step(Tsuma); grid on;
+title('Closed Loop Step Response (Feedback only)');
+info_step_feedback = stepinfo(Tsuma);
 
 %% Feedforward Controller tuning
 % New controller parameters for ff
@@ -136,23 +136,55 @@ figure;
 bode(Cff); grid on;
 title('Feedforward Controller Response');
 
-if isproper(C)
+if isproper(Cff)
     disp('Feedforward controller is proper! Check response for strictly proper')
 end
 %IS PROPER VERY NICE! (Borat voice)
 
-% disp(LowPass);
-% LowPass
-% PropaF = LowPass * F;
-% figure;
-% bode(PropaF); grid on;
-% title('Proper Feedforward Controller Response');
+%% Combined step response
+Cff.u='r'; Cff.y='f';
 
-% [num, den] = tfdata(F, 'v'); % Replace F with your feedforward transfer function
-% 
-% % Compare degrees
-% deg_num = length(num) - 1; % Degree of numerator
-% deg_den = length(den) - 1; % Degree of denominator
+S1 = sumblk("e = r - y");
+S2 = sumblk("u = d + v + f");
+S3 = sumblk("y = x + n");
 
-% deg_num
-% deg_den
+Tsumb = connect(G,C,Cff,S1,S2,S3,"r","y");
+
+figure;
+step(Tsumb); grid on;
+title('Closed Loop Step Response (Feedback & Feedforward)');
+info_step_feedfoward_feedback = stepinfo(Tsumb);
+
+%% Architecture comparison
+% Start with reference tracking
+figure;
+bode(Tsuma); grid on;
+title('Reference Tracking (Feedback only)');
+
+figure;
+bode(Tsumb); grid on;
+title('Reference Tracking (Feedback & Feedforward)');
+
+% Disturbance rejection y/d
+GSa = connect(G,C,S1,S2,S3,"d","y");
+GSb = connect(G,C,Cff,S1,S2,S3,"d","y");
+
+figure;
+bode(GSa); grid on;
+title('Disturbance Rejection (Feedback only)');
+
+figure;
+bode(GSb); grid on;
+title('Disturbance Rejection (Feedback & Feedforward)');
+
+% Noise Attenuation y/n
+Sa = connect(G,C,S1,S2,S3,"n","y");
+Sb = connect(G,C,Cff,S1,S2,S3,"n","y");
+
+figure;
+bode(Sa); grid on;
+title('Noise Attenuation (Feedback only)');
+
+figure;
+bode(Sb); grid on;
+title('Noise Attenuation (Feedback & Feedforward)');
