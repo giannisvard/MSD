@@ -64,78 +64,142 @@ output3 = y;
 %CHECK HERTZ OR RAD/S OUTPUT
 Fs_rads = 2 * pi / Ts; % Sampling frequency in rad/s
 
-% e/r
+% e/r   Sensitivity
 [T1, f1] = tfestimate(input, output1, window, overlap, ft, Fs); % Pass overlap and window explicitly
 [C1, f1] = mscohere(input, output1, window, overlap, ft, Fs)
 
-% u/r
+% u/r   Noise/Control Sensitivity
 [T2, f2] = tfestimate(input, output2, window, overlap, ft, Fs); % Pass overlap and window explicitly
 [C2, f2] = mscohere(input, output2, window, overlap, ft, Fs)
 
 
-% y/r   
+% y/r   Complimentary Sensitivity
 [T3, f3] = tfestimate(input, output3, window, overlap, ft, Fs); % Pass overlap and window explicitly
 [C3, f3] = mscohere(input, output3, window, overlap, ft, Fs)
 
 
 figure;
 %e/r TF and coherence
-subplot(3,2,1);
+subplot(3,1,1);
 semilogx(f1,mag2db(abs(T1))); hold on;
 xlim([1,max(f1)]);
 xlabel('Frequency (Hz)');
 ylabel('Magnitude (dB)');
 grid on;
-title('TF e/r');
+title('Magnitude e/r: Sensitivity Function');
 
-subplot(3,2,2);
-semilogx(f1,mag2db(abs(C1))); hold on;
+subplot(3,1,2);
+semilogx(f1,rad2deg(angle(T1))); hold on;
 xlim([1,max(f1)]);
 xlabel('Frequency (Hz)');
-ylabel('Magnitude (dB)');
+ylabel('Phase (deg)');
 grid on;
-title('Coherence e/r');
+title('Phase e/r: Sensitivity Function');
 
+subplot(3,1,3);
+semilogx(f1,C1); hold on;
+xlim([1,max(f1)]);
+xlabel('Frequency (Hz)');
+ylabel('Coherence');
+grid on;
+title('Coherence e/r: Sensitivity Function');
 
+figure;
 %u/r TF and coherence
-subplot(3,2,3);
+subplot(3,1,1);
 semilogx(f2,mag2db(abs(T2))); hold on;
 xlim([1,max(f1)]);
 xlabel('Frequency (Hz)');
 ylabel('Magnitude (dB)');
 grid on;
-title('TF u/r');
+title('Magnitude u/r: Control Sensitivity Function');
 
-subplot(3,2,4);
-semilogx(f2,mag2db(abs(C2))); hold on;
+subplot(3,1,2);
+semilogx(f2,rad2deg(angle(T2))); hold on;
 xlim([1,max(f1)]);
 xlabel('Frequency (Hz)');
-ylabel('Magnitude (dB)');
+ylabel('Phase (deg');
 grid on;
-title('Coherence u/r');
+title('Phase u/r: Control Sensitivity Function');
 
+subplot(3,1,3);
+semilogx(f2,C2); hold on;
+xlim([1,max(f1)]);
+xlabel('Frequency (Hz)');
+ylabel('Coherence');
+grid on;
+title('Coherence u/r: Control Sensitivity Function');
 
+figure;
 %y/r TF and coherence
-subplot(3,2,5);
+subplot(3,1,1);
 semilogx(f3,mag2db(abs(T3))); hold on;
 xlim([1,max(f1)]);
 xlabel('Frequency (Hz)');
 ylabel('Magnitude (dB)');
 grid on;
-title('TF y/r');
+title('Magnitude y/r: Complimentary Sensitivity Function');
 
-subplot(3,2,6);
-semilogx(f3,mag2db(abs(C3))); hold on;
+subplot(3,1,2);
+semilogx(f3,rad2deg(angle(T3))); hold on;
+xlim([1,max(f1)]);
+xlabel('Frequency (Hz)');
+ylabel('Phase (deg)');
+grid on;
+title('Phase y/r: Complimentary Sensitivity Function');
+
+subplot(3,1,3);
+semilogx(f3,C3); hold on;
+xlim([1,max(f1)]);
+xlabel('Frequency (Hz)');
+ylabel('Coherence');
+grid on;
+title('Coherence y/r: Complimentary Sensitivity Function');
+
+%% Problem B4: calculate and present freq response of plant and controller
+%CT TF for S
+
+C = T2 .* (1 + T3 ./ (1 - T3));
+P = (1 - T1) ./ (T1 .* C);
+
+figure;
+subplot(2,1,1);
+semilogx(f1,mag2db(abs(C))); hold on;
 xlim([1,max(f1)]);
 xlabel('Frequency (Hz)');
 ylabel('Magnitude (dB)');
 grid on;
-title('Coherence y/r');
+title('Identified Controller Magnitude');
 
-%% Problem B4: calculate and present freq response of plant and controller
-  
+subplot(2,1,2);
+semilogx(f1,rad2deg(angle(C))); hold on;
+xlim([1,max(f1)]);
+xlabel('Frequency (Hz)');
+ylabel('Phase (deg)');
+grid on;
+title('Identified Controller Phase');
 
 
+
+figure;
+semilogx(f3,mag2db(abs(P))); hold on;
+xlim([1,max(f1)]);
+xlabel('Frequency (Hz)');
+ylabel('Magnitude (dB)');
+grid on;
+title('test P');
+
+
+
+
+
+% figure(2);clf(2);
+% subplot(3,1,1);semilogx(f,mag2db(abs(T))); grid on; hold on;
+% title('Transfer Function from tfestimate (Magnitude)');
+% subplot(3,1,2);semilogx(f,rad2deg(angle(T))); grid on; hold on;
+% title('Transfer Function from tfestimate (Phase');
+% subplot(3,1,3);semilogx(f,C); grid on; hold on;
+% title('Coherence function from mscohere');
 
 
 
