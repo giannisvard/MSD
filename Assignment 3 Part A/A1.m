@@ -42,26 +42,9 @@ N = mag_n * 1j * w_n;     % Laplace domain: pure sinusoid
 
 %% Copied controller from Assingment 2
 
-K1 = 1600;                % Proportional gain: moves entire plot up or down
-z = 733;                  % Zero of 2nd order PD: break frequency
-Q = 6;                    % Damping of 2nd order PD: 10 
-p1 = 5000;                % Pole 1 
-p2 = 6000;                % Pole 2 
 
-% Low freq integrator (pole)
-I_low = 1 / s;
-
-% 2nd Order PD Filter
-PD = K1 * ((s/(2*pi*z))^2 + (s/(Q*(2*pi*z))) + 1);
-
-% High freq integrator (pole)
-I_high = 1 / (1 + s/(2*pi*p1));
-
-% Higher freq integrator (pole)
-I_higher = 1 / (1.20 + s/(2*pi*p2));
-
-% Complete controller
-C = I_low * PD * I_high * I_higher;
+%construct controller
+C = C_PID_real * notch * skewed_notch;
 
 %% Construct system transfer functions
 
