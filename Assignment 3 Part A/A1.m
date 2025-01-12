@@ -44,8 +44,7 @@ N = mag_n * 1j * w_n;     % Laplace domain: pure sinusoid
 
 
 %construct controller
-C = C_PID_real * notch * skewed_notch;
-
+C = controller_assignment_2();
 %% Construct system transfer functions
 
 L = C * G;               % Open loop transfer function
