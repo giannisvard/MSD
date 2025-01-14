@@ -36,3 +36,6 @@ title("Discrete Fourier Transform of Process Disturbance")
 xlabel("f (Hz)")
 ylabel("|d| (V)")
 grid on
+
+%% B2
+% Input 
