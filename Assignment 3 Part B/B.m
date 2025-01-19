@@ -99,12 +99,6 @@ title("PSD of Output y")
 xlabel("f (Hz)")
 ylabel("PSD (\mum^2/Hz)")
 grid on
-figure
-loglog(f_vec,abs(A_S))
-title("Response of S")
-figure
-loglog(f_vec,abs(A_GS))
-title("Response of GS")
 %% B4
 % Calculate Cumulative Power Spectrum
 cps_y = cumsum(psd_y)*delta_f;
@@ -123,3 +117,100 @@ xlabel("f (Hz)")
 ylabel("CPS (\mum^2)")
 legend('Output','Process Disturbance','Output Disturbance')
 grid on
+
+% Define the frequency range
+f_min = 1e2; % 100 Hz
+f_max = 1e4; % 10,000 Hz
+
+% Filter the data to include only the specified frequency range
+valid_indices = (f_vec >= f_min) & (f_vec <= f_max);
+f_filtered = f_vec(valid_indices);
+cps_y_filtered = cps_y(valid_indices);
+cps_d_filtered = cps_d(valid_indices);
+cps_n_filtered = cps_n(valid_indices);
+
+% Plot PSD within the specified frequency range
+figure;
+loglog(f_filtered, cps_y_filtered, 'k', "LineWidth", 2); % Output
+hold on;
+loglog(f_filtered, cps_d_filtered, 'r', "LineWidth", 2); % Process Disturbance
+loglog(f_filtered, cps_n_filtered, 'b', "LineWidth", 2); % Output Disturbance
+hold off;
+
+% Add title, labels, legend, and grid
+title("CPS (Filtered Frequency Range)");
+xlabel("f (Hz)");
+ylabel("CPS (\mum^2)");
+legend('Output', 'Process Disturbance', 'Output Disturbance');
+grid on;
+
+%% B5
+% Import updated controller
+C_new = revised_controller(C,G);
+
+% Update transfer functions
+GS = P/(1+P*C);                         % Process sensitivity
+S = 1/(1+P*C);                          % Output sensitivity
+% Calculate function frequency response
+[A_GS,~] = freqresp(GS,2*pi*f_vec);    % Freqresponse for GS
+A_GS = squeeze(A_GS)';                      % Remove empty dimensions
+[A_S,~] = freqresp(S,2*pi*f_vec);       % Freqresponse for S
+A_S = squeeze(A_S)';                        % Remove empty dimensions
+% Calculate PSD components
+H2_d = abs(A_GS).^2;
+H2_n = abs(A_S).^2;
+% Calculate PSD of y
+psd_y = (H2_d.*psd_d) + (H2_n.*psd_n);   % PSD of y, the result of this does not make sense
+% Plot PSD of y
+figure;
+semilogx(f_vec,psd_y,'k',"LineWidth",2);
+title("PSD of Output y")
+xlabel("f (Hz)")
+ylabel("PSD (\mum^2/Hz)")
+grid on
+
+% Calculate Cumulative Power Spectrum
+cps_y_updated = cumsum(psd_y)*delta_f;
+cps_d_updated = cumsum(H2_d.*psd_d)*delta_f;
+cps_n_updated = cumsum(H2_n.*psd_n)*delta_f;
+% Plot PSD of y
+figure;
+loglog(f_vec,cps_y_updated,'k',"LineWidth",2);
+hold on
+loglog(f_vec,cps_d_updated,'r',"LineWidth",2);
+hold on
+loglog(f_vec,cps_n_updated,'b',"LineWidth",2);
+hold off
+title("CPS (Updated)")
+xlabel("f (Hz)")
+ylabel("CPS (\mum^2)")
+legend('Output','Process Disturbance','Output Disturbance')
+grid on
+
+% Filter the data to include only the specified frequency range
+cps_y_filtered = cps_y_updated(valid_indices);
+cps_d_filtered = cps_d_updated(valid_indices);
+cps_n_filtered = cps_n_updated(valid_indices);
+
+% Plot PSD within the specified frequency range
+figure;
+loglog(f_filtered, cps_y_filtered, 'k', "LineWidth", 2); % Output
+hold on;
+loglog(f_filtered, cps_d_filtered, 'r', "LineWidth", 2); % Process Disturbance
+loglog(f_filtered, cps_n_filtered, 'b', "LineWidth", 2); % Output Disturbance
+hold off;
+
+% Add title, labels, legend, and grid
+title("CPS (Updated, Filtered Frequency Range)");
+xlabel("f (Hz)");
+ylabel("CPS (\mum^2)");
+legend('Output', 'Process Disturbance', 'Output Disturbance');
+grid on;
+
+%% Debugging for B5
+
+Delta_cps = cps_y_updated-cps_y;
+
+figure;
+plot(f_vec,Delta_cps)
+title('CPS diff')
