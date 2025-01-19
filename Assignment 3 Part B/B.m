@@ -149,8 +149,8 @@ grid on;
 C_new = revised_controller(C,G);
 
 % Update transfer functions
-GS = P/(1+P*C);                         % Process sensitivity
-S = 1/(1+P*C);                          % Output sensitivity
+GS = P/(1+P*C_new);                         % Process sensitivity
+S = 1/(1+P*C_new);                          % Output sensitivity
 % Calculate function frequency response
 [A_GS,~] = freqresp(GS,2*pi*f_vec);    % Freqresponse for GS
 A_GS = squeeze(A_GS)';                      % Remove empty dimensions
@@ -160,17 +160,17 @@ A_S = squeeze(A_S)';                        % Remove empty dimensions
 H2_d = abs(A_GS).^2;
 H2_n = abs(A_S).^2;
 % Calculate PSD of y
-psd_y = (H2_d.*psd_d) + (H2_n.*psd_n);   % PSD of y, the result of this does not make sense
+psd_y_updated = (H2_d.*psd_d) + (H2_n.*psd_n);   % PSD of y, the result of this does not make sense
 % Plot PSD of y
 figure;
-semilogx(f_vec,psd_y,'k',"LineWidth",2);
-title("PSD of Output y")
+semilogx(f_vec,psd_y_updated,'k',"LineWidth",2);
+title("PSD of Output y (Updated)")
 xlabel("f (Hz)")
 ylabel("PSD (\mum^2/Hz)")
 grid on
 
 % Calculate Cumulative Power Spectrum
-cps_y_updated = cumsum(psd_y)*delta_f;
+cps_y_updated = cumsum(psd_y_updated)*delta_f;
 cps_d_updated = cumsum(H2_d.*psd_d)*delta_f;
 cps_n_updated = cumsum(H2_n.*psd_n)*delta_f;
 % Plot PSD of y
@@ -207,10 +207,23 @@ ylabel("CPS (\mum^2)");
 legend('Output', 'Process Disturbance', 'Output Disturbance');
 grid on;
 
-%% Debugging for B5
-
+% Calculate differences
+Delta_psd = psd_y_updated-psd_y;
 Delta_cps = cps_y_updated-cps_y;
 
+% Plot differences
 figure;
-plot(f_vec,Delta_cps)
-title('CPS diff')
+semilogx(f_vec,Delta_psd, "LineWidth", 2)
+title('PSD change')
+xlabel("f (Hz)");
+ylabel("PSD (\mum^2/Hz)");
+grid on
+
+figure;
+semilogx(f_vec,Delta_cps, "LineWidth", 2)
+title('CPS change')
+xlabel("f (Hz)");
+ylabel("CPS (\mum^2)");
+grid on
+
+
